@@ -1,0 +1,18 @@
+#!/bin/sh
+
+lock() {
+    tt out
+}
+
+unlock() {
+    tt in
+}
+
+xscreensaver-command -watch | while read a; do
+    if [ $(echo "$a" | grep -c '^LOCK') -gt 0 ]; then
+        lock
+    fi
+    if [ $(echo "$a" | grep -c '^UNBLANK') -gt 0 ]; then
+        unlock
+    fi
+done
