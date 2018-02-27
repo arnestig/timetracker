@@ -1,0 +1,85 @@
+#!/bin/sh
+
+ACTION=${1}
+TT_FILE=/tmp/tt.time
+
+input_time()
+{
+    TYPE=${1}
+    CUR_DATE=$(date +%F)
+    DATE=$(cat ${TT_FILE}|grep DATE|cut -d= -f2)
+    if [ "x${DATE}" != "x${CUR_DATE}" ]; then
+        echo "DATE=${CUR_DATE}" > ${TT_FILE}
+    fi
+    if [ "x${TYPE}" = "xO" ] && [ $(grep -c "I-" ${TT_FILE}) -eq 0 ] ; then
+        return
+    fi
+    if [ $(tail -n1 ${TT_FILE}|grep -c "${TYPE}-") -eq 0 ]; then
+        echo "${TYPE}-$(date +%T)" >> ${TT_FILE}
+    fi
+}
+
+read_time()
+{
+    SECONDS=0
+    DATE=$(cat ${TT_FILE}|grep DATE|cut -d= -f2)
+    CUR_DATE=$(date +%F)
+    SEC_RET=0
+    LAST_IN_EPOCH=0
+    if [ "x${DATE}" = "x${CUR_DATE}" ]; then
+        CLOCK_IN=
+        CLOCK_OUT=
+        for stamp in $(cat ${TT_FILE}|egrep '^I|^O'); do
+            TYPE=$(echo ${stamp}|cut -d- -f1)
+            TIME=$(echo ${stamp}|cut -d- -f2)
+            if [ "x${TYPE}" = "xI" ]; then
+                CLOCK_IN=${TIME}
+                LAST_IN_EPOCH=$(date --date "${DATE} ${TIME}" +%s)
+            elif [ "x${TYPE}" = "xO" ]; then
+                CLOCK_OUT=${TIME}
+                OUT_EPOCH=$(date --date "${DATE} ${TIME}" +%s)
+                IN_EPOCH=$(date --date "${DATE} ${CLOCK_IN}" +%s)
+                DUR=$((${OUT_EPOCH}-${IN_EPOCH}))
+                if [ ${DUR} -gt 0 ]; then
+                    SEC_RET=$((${SEC_RET}+${DUR}))
+                    LAST_IN_EPOCH=0
+                fi
+            fi
+        done
+        if [ ${LAST_IN_EPOCH} -ne 0 ]; then
+            OUT_EPOCH=$(date +%s)
+            DUR=$((${OUT_EPOCH}-${LAST_IN_EPOCH}))
+            if [ ${DUR} -gt 0 ]; then
+                SEC_RET=$((${SEC_RET}+${DUR}))
+            fi
+        fi
+    else
+        echo "DATE=${CUR_DATE}" > ${TT_FILE}
+    fi
+    HOURS=$((${SEC_RET}/60/60))
+    SEC_RET=$((${SEC_RET}-${HOURS}*60*60))
+    MINUTES=$((${SEC_RET}/60))
+    printf "%02d:%02d" ${HOURS} ${MINUTES}
+}
+
+usage()
+{
+    echo "Usage: $0 [in|out|read]"
+    exit 1
+}
+
+case ${ACTION} in
+    in)
+    input_time I
+    ;;
+    out)
+    input_time O
+    ;;
+    read)
+    read_time
+    ;;
+    *)
+    usage
+    ;;
+esac
+
