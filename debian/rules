@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+build:
+
+binary:
+	dh_install
+	dh_installinit
+	dh_installdeb
+	dh_gencontrol
+	dh_builddeb
+
+clean:
+	dh_clean
