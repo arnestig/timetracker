@@ -14,7 +14,7 @@ start_monitor()
     start-stop-daemon --startas /usr/bin/tt-monitor --start --background --oknodo --make-pidfile --pidfile=/var/run/tt-monitor.pid
 }
 
-start_monitor()
+stop_monitor()
 {
     start-stop-daemon --stop --quiet --pidfile=/var/run/tt-monitor.pid
 }
