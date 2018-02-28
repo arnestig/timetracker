@@ -2,6 +2,7 @@
 
 ACTION=${1}
 TT_FILE=/tmp/tt.time
+TT_LIB=/var/lib/timetracker
 
 input_time()
 {
@@ -9,6 +10,7 @@ input_time()
     CUR_DATE=$(date +%F)
     DATE=$(cat ${TT_FILE}|grep DATE|cut -d= -f2)
     if [ "x${DATE}" != "x${CUR_DATE}" ]; then
+        mv ${TT_FILE} ${TT_LIB}/${DATE}.tt
         echo "DATE=${CUR_DATE}" > ${TT_FILE}
     fi
     if [ "x${TYPE}" = "xO" ] && [ $(grep -c "I-" ${TT_FILE}) -eq 0 ] ; then
@@ -53,8 +55,6 @@ read_time()
                 SEC_RET=$((${SEC_RET}+${DUR}))
             fi
         fi
-    else
-        echo "DATE=${CUR_DATE}" > ${TT_FILE}
     fi
     HOURS=$((${SEC_RET}/60/60))
     SEC_RET=$((${SEC_RET}-${HOURS}*60*60))
