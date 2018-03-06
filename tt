@@ -4,6 +4,15 @@ ACTION=${1}
 TT_FILE=/tmp/tt.time
 TT_LIB=/var/lib/timetracker
 
+parse_time()
+{
+    for file in $(ls ${TT_LIB}); do
+        DATE=$(echo ${file}|cut -d. -f1)
+        TIME=$(read_time ${TT_LIB}/${file} ${DATE})
+        echo ${DATE} - ${TIME}
+    done
+}
+
 input_time()
 {
     TYPE=${1}
@@ -23,15 +32,16 @@ input_time()
 
 read_time()
 {
+    READ_FILE=${1}
+    READ_DATE=${2}
     SECONDS=0
-    DATE=$(cat ${TT_FILE}|grep DATE|cut -d= -f2)
-    CUR_DATE=$(date +%F)
+    DATE=$(cat ${READ_FILE}|grep DATE|cut -d= -f2)
     SEC_RET=0
     LAST_IN_EPOCH=0
-    if [ "x${DATE}" = "x${CUR_DATE}" ]; then
+    if [ "x${DATE}" = "x${READ_DATE}" ]; then
         CLOCK_IN=
         CLOCK_OUT=
-        for stamp in $(cat ${TT_FILE}|egrep '^I|^O'); do
+        for stamp in $(cat ${READ_FILE}|egrep '^I|^O'); do
             TYPE=$(echo ${stamp}|cut -d- -f1)
             TIME=$(echo ${stamp}|cut -d- -f2)
             if [ "x${TYPE}" = "xI" ]; then
@@ -76,7 +86,10 @@ case ${ACTION} in
     input_time O
     ;;
     read)
-    read_time
+    read_time ${TT_FILE} $(date +%F)
+    ;;
+    parse)
+    parse_time
     ;;
     *)
     usage
