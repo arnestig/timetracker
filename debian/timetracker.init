@@ -13,7 +13,7 @@ start_monitor()
 {
     TT_MONITOR_PID=$(pidof -x tt-monitor)
     if [ "x${TT_MONITOR_PID}" != "x" ]; then
-        killall ${TT_MONITOR_PID}
+        kill -15 ${TT_MONITOR_PID}
     fi
     start-stop-daemon --startas /usr/bin/tt-monitor --start --background --oknodo --make-pidfile --pidfile=/var/run/tt-monitor.pid
 }
